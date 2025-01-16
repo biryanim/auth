@@ -27,11 +27,11 @@ generate-auth-api:
 	api/user_api_v1/user.proto
 
 
-local-chat-server-migration-status:
+migration-status:
 	$(LOCAL_BIN)/goose -dir ${MIGRATION_DIR} postgres ${MIGRATION_DSN} status -v
 
-local-chat-server-migration-up:
+migration-up:
 	$(LOCAL_BIN)/goose -dir ${MIGRATION_DIR} postgres ${MIGRATION_DSN} up -v
 
-local-chat-server-migration-down:
+migration-down:
 	$(LOCAL_BIN)/goose -dir ${MIGRATION_DIR} postgres ${MIGRATION_DSN} down -v
