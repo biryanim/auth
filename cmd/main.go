@@ -3,7 +3,7 @@ package main
 import (
 	"context"
 	"flag"
-	"github.com/biryanim/chat_server/auth/internal/config"
+	"github.com/biryanim/auth/internal/config"
 	"log"
 )
 
