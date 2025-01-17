@@ -2,13 +2,13 @@ package user
 
 import (
 	"context"
-	"fmt"
 	sq "github.com/Masterminds/squirrel"
 	"github.com/biryanim/auth/internal/repository"
 	"github.com/biryanim/auth/internal/repository/user/converter"
 	"github.com/biryanim/auth/internal/repository/user/model"
 	desc "github.com/biryanim/auth/pkg/user_api_v1"
 	"github.com/jackc/pgx/v4/pgxpool"
+	"time"
 )
 
 const (
@@ -66,7 +66,6 @@ func (r *repo) Get(ctx context.Context, id int64) (*desc.User, error) {
 
 	var user model.User
 	err = r.db.QueryRow(ctx, query, args...).Scan(&user.ID, &user.Info.Name, &user.Info.Email, &user.Info.Role, &user.CreatedAt, &user.UpdatedAt)
-	fmt.Println("HEEEEEEREEEE")
 	if err != nil {
 		return nil, err
 	}
@@ -88,6 +87,7 @@ func (r *repo) Update(ctx context.Context, id int64, updateInfo *desc.UpdateUser
 		PlaceholderFormat(sq.Dollar).
 		Set(nameColumn, name).
 		Set(emailColumn, email).
+		Set(updatedAtColumn, time.Now()).
 		Where(sq.Eq{idColumn: id})
 
 	query, args, err := builder.ToSql()
