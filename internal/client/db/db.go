@@ -16,6 +16,16 @@ type Query struct {
 	QueryRaw string
 }
 
+type Hadler = func(ctx context.Context) error
+
+type TxManager interface {
+	ReadCommited(ctx context.Context, f Hadler) error
+}
+
+type Transactor interface {
+	BeginTx(ctx context.Context, txOptions pgx.TxOptions) (pgx.Tx, error)
+}
+
 type SQLExecer interface {
 	NamedExecer
 	QueryExecer
@@ -37,6 +47,7 @@ type Pinger interface {
 }
 
 type DB interface {
+	Transactor
 	SQLExecer
 	Pinger
 	Close()
