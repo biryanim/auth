@@ -3,13 +3,14 @@ package app
 import (
 	"context"
 	"github.com/biryanim/auth/internal/api/user"
+	"github.com/biryanim/auth/internal/client/db"
+	"github.com/biryanim/auth/internal/client/db/pg"
 	"github.com/biryanim/auth/internal/closer"
 	"github.com/biryanim/auth/internal/config"
 	"github.com/biryanim/auth/internal/repository"
 	userRepository "github.com/biryanim/auth/internal/repository/user"
 	"github.com/biryanim/auth/internal/service"
 	userService "github.com/biryanim/auth/internal/service/user"
-	"github.com/jackc/pgx/v4/pgxpool"
 	"log"
 )
 
@@ -17,7 +18,7 @@ type serviceProvider struct {
 	pgConfig   config.PGConfig
 	grpcConfig config.GRPCConfig
 
-	pgPool         *pgxpool.Pool
+	dbClient       db.Client
 	userRepository repository.UserRepository
 
 	userService service.UserService
@@ -55,26 +56,23 @@ func (s *serviceProvider) GRPCConfig() config.GRPCConfig {
 	return s.grpcConfig
 }
 
-func (s *serviceProvider) PgPool(ctx context.Context) *pgxpool.Pool {
-	if s.pgPool == nil {
-		pool, err := pgxpool.Connect(ctx, s.PGConfig().DSN())
+func (s *serviceProvider) PgPool(ctx context.Context) db.Client {
+	if s.dbClient == nil {
+		cl, err := pg.New(ctx, s.PGConfig().DSN())
 		if err != nil {
-			log.Fatalf("failed to connect to database: %v", err)
+			log.Fatalf("failed to create db client: %v", err)
 		}
 
-		err = pool.Ping(ctx)
+		err = cl.DB().Ping(ctx)
 		if err != nil {
-			log.Fatalf("failed to ping database: %v", err)
+			log.Fatalf("failed to ping db: %v", err)
 		}
-		closer.Add(func() error {
-			pool.Close()
-			return nil
-		})
+		closer.Add(cl.Close)
 
-		s.pgPool = pool
+		s.dbClient = cl
 	}
 
-	return s.pgPool
+	return s.dbClient
 }
 
 func (s *serviceProvider) UserRepository(ctx context.Context) repository.UserRepository {

@@ -3,11 +3,11 @@ package user
 import (
 	"context"
 	sq "github.com/Masterminds/squirrel"
+	"github.com/biryanim/auth/internal/client/db"
 	"github.com/biryanim/auth/internal/model"
 	"github.com/biryanim/auth/internal/repository"
 	"github.com/biryanim/auth/internal/repository/user/converter"
 	modelRepo "github.com/biryanim/auth/internal/repository/user/model"
-	"github.com/jackc/pgx/v4/pgxpool"
 	"time"
 )
 
@@ -24,10 +24,10 @@ const (
 )
 
 type repo struct {
-	db *pgxpool.Pool
+	db db.Client
 }
 
-func NewRepository(db *pgxpool.Pool) repository.UserRepository {
+func NewRepository(db db.Client) repository.UserRepository {
 	return &repo{db: db}
 }
 
@@ -43,8 +43,13 @@ func (r *repo) Create(ctx context.Context, userInfo *model.UserInfo) (int64, err
 		return 0, err
 	}
 
+	q := db.Query{
+		Name:     "user_repository.Create",
+		QueryRaw: query,
+	}
+
 	var id int64
-	err = r.db.QueryRow(ctx, query, args...).Scan(&id)
+	err = r.db.DB().QueryRowContext(ctx, q, args...).Scan(&id)
 	if err != nil {
 		return 0, err
 	}
@@ -64,8 +69,13 @@ func (r *repo) Get(ctx context.Context, id int64) (*model.User, error) {
 		return nil, err
 	}
 
+	q := db.Query{
+		Name:     "user_repository.Get",
+		QueryRaw: query,
+	}
+
 	var user modelRepo.User
-	err = r.db.QueryRow(ctx, query, args...).Scan(&user.ID, &user.Info.Name, &user.Info.Email, &user.Info.Role, &user.CreatedAt, &user.UpdatedAt)
+	err = r.db.DB().ScanOneContext(ctx, &user, q, args...)
 	if err != nil {
 		return nil, err
 	}
@@ -74,15 +84,6 @@ func (r *repo) Get(ctx context.Context, id int64) (*model.User, error) {
 }
 
 func (r *repo) Update(ctx context.Context, id int64, updateInfo *model.UpdateUserInfo) error {
-	//var name, email *string
-	//if updateInfo.Name != nil {
-	//	nameValue := updateInfo.Name.GetValue()
-	//	name = &nameValue
-	//}
-	//if updateInfo.Email != nil {
-	//	emailValue := updateInfo.Email.GetValue()
-	//	email = &emailValue
-	//}
 	builder := sq.Update(tableName).
 		PlaceholderFormat(sq.Dollar).
 		Set(nameColumn, updateInfo.Name).
@@ -95,7 +96,12 @@ func (r *repo) Update(ctx context.Context, id int64, updateInfo *model.UpdateUse
 		return err
 	}
 
-	_, err = r.db.Exec(ctx, query, args...)
+	q := db.Query{
+		Name:     "user_repository.Update",
+		QueryRaw: query,
+	}
+
+	_, err = r.db.DB().ExecContext(ctx, q, args...)
 	return err
 }
 
@@ -109,6 +115,11 @@ func (r *repo) Delete(ctx context.Context, id int64) error {
 		return err
 	}
 
-	_, err = r.db.Exec(ctx, query, args...)
+	q := db.Query{
+		Name:     "user_repository.Delete",
+		QueryRaw: query,
+	}
+
+	_, err = r.db.DB().ExecContext(ctx, q, args...)
 	return err
 }
