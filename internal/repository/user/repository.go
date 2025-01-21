@@ -3,10 +3,10 @@ package user
 import (
 	"context"
 	sq "github.com/Masterminds/squirrel"
+	"github.com/biryanim/auth/internal/model"
 	"github.com/biryanim/auth/internal/repository"
 	"github.com/biryanim/auth/internal/repository/user/converter"
-	"github.com/biryanim/auth/internal/repository/user/model"
-	desc "github.com/biryanim/auth/pkg/user_api_v1"
+	modelRepo "github.com/biryanim/auth/internal/repository/user/model"
 	"github.com/jackc/pgx/v4/pgxpool"
 	"time"
 )
@@ -27,15 +27,15 @@ type repo struct {
 	db *pgxpool.Pool
 }
 
-func NewRepository(db *pgxpool.Pool) repository.UsersRepository {
+func NewRepository(db *pgxpool.Pool) repository.UserRepository {
 	return &repo{db: db}
 }
 
-func (r *repo) Create(ctx context.Context, userInfo *desc.UserInfo) (int64, error) {
+func (r *repo) Create(ctx context.Context, userInfo *model.UserInfo) (int64, error) {
 	builder := sq.Insert(tableName).
 		PlaceholderFormat(sq.Dollar).
 		Columns(nameColumn, emailColumn, roleColumn).
-		Values(userInfo.Name, userInfo.Email, userInfo.Role.String()).
+		Values(userInfo.Name, userInfo.Email, userInfo.Role).
 		Suffix("RETURNING id")
 
 	query, args, err := builder.ToSql()
@@ -52,7 +52,7 @@ func (r *repo) Create(ctx context.Context, userInfo *desc.UserInfo) (int64, erro
 	return id, nil
 }
 
-func (r *repo) Get(ctx context.Context, id int64) (*desc.User, error) {
+func (r *repo) Get(ctx context.Context, id int64) (*model.User, error) {
 	builder := sq.Select(idColumn, nameColumn, emailColumn, roleColumn, createdAtColumn, updatedAtColumn).
 		PlaceholderFormat(sq.Dollar).
 		From(tableName).
@@ -64,7 +64,7 @@ func (r *repo) Get(ctx context.Context, id int64) (*desc.User, error) {
 		return nil, err
 	}
 
-	var user model.User
+	var user modelRepo.User
 	err = r.db.QueryRow(ctx, query, args...).Scan(&user.ID, &user.Info.Name, &user.Info.Email, &user.Info.Role, &user.CreatedAt, &user.UpdatedAt)
 	if err != nil {
 		return nil, err
@@ -73,20 +73,20 @@ func (r *repo) Get(ctx context.Context, id int64) (*desc.User, error) {
 	return converter.ToUserFromRepo(&user), nil
 }
 
-func (r *repo) Update(ctx context.Context, id int64, updateInfo *desc.UpdateUserInfo) error {
-	var name, email *string
-	if updateInfo.Name != nil {
-		nameValue := updateInfo.Name.GetValue()
-		name = &nameValue
-	}
-	if updateInfo.Email != nil {
-		emailValue := updateInfo.Email.GetValue()
-		email = &emailValue
-	}
+func (r *repo) Update(ctx context.Context, id int64, updateInfo *model.UpdateUserInfo) error {
+	//var name, email *string
+	//if updateInfo.Name != nil {
+	//	nameValue := updateInfo.Name.GetValue()
+	//	name = &nameValue
+	//}
+	//if updateInfo.Email != nil {
+	//	emailValue := updateInfo.Email.GetValue()
+	//	email = &emailValue
+	//}
 	builder := sq.Update(tableName).
 		PlaceholderFormat(sq.Dollar).
-		Set(nameColumn, name).
-		Set(emailColumn, email).
+		Set(nameColumn, updateInfo.Name).
+		Set(emailColumn, updateInfo.Email).
 		Set(updatedAtColumn, time.Now()).
 		Where(sq.Eq{idColumn: id})
 

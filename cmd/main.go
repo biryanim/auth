@@ -4,8 +4,10 @@ import (
 	"context"
 	"flag"
 	"github.com/biryanim/auth/internal/config"
-	"github.com/biryanim/auth/internal/repository"
-	"github.com/biryanim/auth/internal/repository/user"
+	"github.com/biryanim/auth/internal/converter"
+	userRepository "github.com/biryanim/auth/internal/repository/user"
+	"github.com/biryanim/auth/internal/service"
+	userService "github.com/biryanim/auth/internal/service/user"
 	desc "github.com/biryanim/auth/pkg/user_api_v1"
 	"github.com/jackc/pgx/v4/pgxpool"
 	"google.golang.org/grpc"
@@ -21,7 +23,7 @@ var configPath string
 
 type server struct {
 	desc.UnimplementedUserAPIV1Server
-	usersRepository repository.UsersRepository
+	userService service.UserService
 }
 
 func (s *server) Create(ctx context.Context, req *desc.CreateRequest) (*desc.CreateResponse, error) {
@@ -29,7 +31,7 @@ func (s *server) Create(ctx context.Context, req *desc.CreateRequest) (*desc.Cre
 		return nil, status.Error(codes.InvalidArgument, "password does not match")
 	}
 
-	id, err := s.usersRepository.Create(ctx, req.GetInfo())
+	id, err := s.userService.Create(ctx, converter.ToUserInfoFromDesc(req.GetInfo()))
 	if err != nil {
 		return nil, err
 	}
@@ -46,7 +48,7 @@ func (s *server) Update(ctx context.Context, req *desc.UpdateRequest) (*emptypb.
 		return nil, status.Error(codes.InvalidArgument, "invalid id")
 	}
 
-	err := s.usersRepository.Update(ctx, req.GetId(), req.GetInfo())
+	err := s.userService.Update(ctx, req.GetId(), converter.ToUpdatedUserInfoFromDesc(req.GetInfo()))
 	if err != nil {
 		return nil, err
 	}
@@ -58,7 +60,7 @@ func (s *server) Delete(ctx context.Context, req *desc.DeleteRequest) (*emptypb.
 		return nil, status.Error(codes.InvalidArgument, "invalid id")
 	}
 
-	err := s.usersRepository.Delete(ctx, req.GetId())
+	err := s.userService.Delete(ctx, req.GetId())
 	if err != nil {
 		return nil, err
 	}
@@ -67,15 +69,15 @@ func (s *server) Delete(ctx context.Context, req *desc.DeleteRequest) (*emptypb.
 }
 
 func (s *server) Get(ctx context.Context, req *desc.GetRequest) (*desc.GetResponse, error) {
-	userObj, err := s.usersRepository.Get(ctx, req.Id)
+	userObj, err := s.userService.Get(ctx, req.Id)
 	if err != nil {
 		return nil, err
 	}
 
-	log.Printf("id: %d,	name: %s,	email: %s,	role: %v,	created_at: %v,	updated_at: %v,", userObj.Id, userObj.Info.Name, userObj.Info.Email, userObj.Info.Role, userObj.CreatedAt, userObj.UpdatedAt)
+	log.Printf("id: %d,	name: %s,	email: %s,	role: %v,	created_at: %v,	updated_at: %v,", userObj.ID, userObj.Info.Name, userObj.Info.Email, userObj.Info.Role, userObj.CreatedAt, userObj.UpdatedAt)
 
 	return &desc.GetResponse{
-		User: userObj,
+		User: converter.ToUserFromService(userObj),
 	}, nil
 }
 
@@ -113,11 +115,12 @@ func main() {
 	}
 	defer pool.Close()
 
-	userRepo := user.NewRepository(pool)
+	userRepo := userRepository.NewRepository(pool)
+	userSrv := userService.NewService(userRepo)
 
 	s := grpc.NewServer()
 	reflection.Register(s)
-	desc.RegisterUserAPIV1Server(s, &server{usersRepository: userRepo})
+	desc.RegisterUserAPIV1Server(s, &server{userService: userSrv})
 
 	log.Printf("server listening on %s", lis.Addr())
 
