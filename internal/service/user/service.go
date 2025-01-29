@@ -1,19 +1,29 @@
 package user
 
 import (
-	"github.com/biryanim/auth/internal/client/db"
 	"github.com/biryanim/auth/internal/repository"
 	"github.com/biryanim/auth/internal/service"
 )
 
 type serv struct {
 	userRepository repository.UserRepository
-	txManager      db.TxManager
 }
 
-func NewService(userRepository repository.UserRepository, txManager db.TxManager) service.UserService {
+func NewService(userRepository repository.UserRepository) service.UserService {
 	return &serv{
 		userRepository: userRepository,
-		txManager:      txManager,
 	}
+}
+
+func NewMockService(deps ...interface{}) service.UserService {
+	srv := serv{}
+
+	for _, dep := range deps {
+		switch s := dep.(type) {
+		case repository.UserRepository:
+			srv.userRepository = s
+		}
+	}
+
+	return &srv
 }
