@@ -7,9 +7,26 @@ import "google/protobuf/empty.proto";
 import "google/protobuf/wrappers.proto";
 import "validate/validate.proto";
 import "google/api/annotations.proto";
+import "protoc-gen-openapiv2/options/annotations.proto";
 
 option go_package = "github.com/biryanim/auth/pkg/user_api_v1;user_api_v1";
 
+option (grpc.gateway.protoc_gen_openapiv2.options.openapiv2_swagger) = {
+    info: {
+        title: "User API"
+        version: "1.0.0"
+        contact: {
+            name: "Arsen Yunusov"
+            email: "ayunusov42@gmail.com"
+        };
+    };
+
+    host: "localhost:8080",
+    schemes: HTTP,
+    schemes: HTTPS,
+    consumes: "application/json",
+    produces: "application/json",
+};
 
 service UserAPIV1 {
     rpc Create(CreateRequest) returns (CreateResponse){
