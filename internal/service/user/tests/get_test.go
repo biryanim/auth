@@ -48,6 +48,7 @@ func TestGet(t *testing.T) {
 			UpdatedAt: sql.NullTime{Time: updatedAt, Valid: true},
 		}
 	)
+	defer t.Cleanup(mc.Finish)
 
 	testCases := []struct {
 		name                string

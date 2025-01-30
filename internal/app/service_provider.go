@@ -3,10 +3,14 @@ package app
 import (
 	"context"
 	"github.com/biryanim/auth/internal/api/user"
-	"github.com/biryanim/auth/internal/client/db"
-	"github.com/biryanim/auth/internal/client/db/pg"
-	"github.com/biryanim/auth/internal/client/db/transaction"
-	"github.com/biryanim/auth/internal/closer"
+	"github.com/biryanim/platform_common/pkg/db"
+	"github.com/biryanim/platform_common/pkg/db/pg"
+	"github.com/biryanim/platform_common/pkg/db/transaction"
+	//"github.com/biryanim/auth/internal/client/db"
+	//"github.com/biryanim/auth/internal/client/db/pg"
+	//"github.com/biryanim/auth/internal/client/db/transaction"
+	"github.com/biryanim/platform_common/pkg/closer"
+	//"github.com/biryanim/auth/internal/closer"
 	"github.com/biryanim/auth/internal/config"
 	"github.com/biryanim/auth/internal/repository"
 	userRepository "github.com/biryanim/auth/internal/repository/user"
@@ -97,7 +101,6 @@ func (s *serviceProvider) UserService(ctx context.Context) service.UserService {
 	if s.userService == nil {
 		s.userService = userService.NewService(
 			s.UserRepository(ctx),
-			s.TxManager(ctx),
 		)
 	}
 

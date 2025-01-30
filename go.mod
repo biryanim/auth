@@ -19,6 +19,7 @@ require (
 )
 
 require (
+	github.com/biryanim/platform_common v0.0.0-20250130110016-832868eae49d // indirect
 	github.com/davecgh/go-spew v1.1.1 // indirect
 	github.com/jackc/chunkreader/v2 v2.0.1 // indirect
 	github.com/jackc/pgio v1.0.0 // indirect

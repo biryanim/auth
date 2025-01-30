@@ -2,9 +2,9 @@ package app
 
 import (
 	"context"
-	"github.com/biryanim/auth/internal/closer"
 	"github.com/biryanim/auth/internal/config"
 	desc "github.com/biryanim/auth/pkg/user_api_v1"
+	"github.com/biryanim/platform_common/pkg/closer"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/credentials/insecure"
 	"google.golang.org/grpc/reflection"

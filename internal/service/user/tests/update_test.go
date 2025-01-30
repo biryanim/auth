@@ -39,6 +39,7 @@ func TestUpdate(t *testing.T) {
 
 		repoErr = fmt.Errorf("repo error")
 	)
+	defer t.Cleanup(mc.Finish)
 
 	tests := []struct {
 		name               string

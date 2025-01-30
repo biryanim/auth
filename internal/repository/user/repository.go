@@ -3,11 +3,12 @@ package user
 import (
 	"context"
 	sq "github.com/Masterminds/squirrel"
-	"github.com/biryanim/auth/internal/client/db"
 	"github.com/biryanim/auth/internal/model"
 	"github.com/biryanim/auth/internal/repository"
 	"github.com/biryanim/auth/internal/repository/user/converter"
 	modelRepo "github.com/biryanim/auth/internal/repository/user/model"
+	//"github.com/biryanim/auth/internal/client/db"
+	"github.com/biryanim/platform_common/pkg/db"
 	"time"
 )
 
