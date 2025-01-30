@@ -3,6 +3,7 @@ package app
 import (
 	"context"
 	"github.com/biryanim/auth/internal/config"
+	"github.com/biryanim/auth/internal/interceptor"
 	desc "github.com/biryanim/auth/pkg/user_api_v1"
 	"github.com/biryanim/platform_common/pkg/closer"
 	"google.golang.org/grpc"
@@ -69,7 +70,10 @@ func (a *App) initServiceProvider(ctx context.Context) error {
 }
 
 func (a *App) initGRPCServer(ctx context.Context) error {
-	a.grpcServer = grpc.NewServer(grpc.Creds(insecure.NewCredentials()))
+	a.grpcServer = grpc.NewServer(
+		grpc.Creds(insecure.NewCredentials()),
+		grpc.UnaryInterceptor(interceptor.ValidateInterceptor),
+	)
 
 	reflection.Register(a.grpcServer)
 
