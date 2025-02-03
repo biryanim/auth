@@ -5,6 +5,8 @@ import (
 	"fmt"
 	"github.com/biryanim/auth/internal/model"
 	"github.com/biryanim/auth/internal/service/user"
+	"github.com/biryanim/platform_common/pkg/db"
+	txMock "github.com/biryanim/platform_common/pkg/db/mocks"
 	"github.com/brianvoe/gofakeit/v7"
 	"github.com/stretchr/testify/require"
 
@@ -18,6 +20,7 @@ func TestCreate(t *testing.T) {
 	t.Parallel()
 
 	type userRepositoryMockFunc func(mc *minimock.Controller) repository.UserRepository
+	type txManagerMock func(mc *minimock.Controller) db.TxManager
 
 	type args struct {
 		ctx context.Context
@@ -48,6 +51,7 @@ func TestCreate(t *testing.T) {
 		want               int64
 		err                error
 		userRepositoryMock userRepositoryMockFunc
+		txManagerMock      txManagerMock
 	}{
 		{
 			name: "success case",
@@ -60,6 +64,10 @@ func TestCreate(t *testing.T) {
 			userRepositoryMock: func(mc *minimock.Controller) repository.UserRepository {
 				mock := repoMock.NewUserRepositoryMock(mc)
 				mock.CreateMock.Expect(ctx, req).Return(id, nil)
+				return mock
+			},
+			txManagerMock: func(mc *minimock.Controller) db.TxManager {
+				mock := txMock.NewTxManagerMock(mc)
 				return mock
 			},
 		},
@@ -76,6 +84,10 @@ func TestCreate(t *testing.T) {
 				mock.CreateMock.Expect(ctx, req).Return(0, repoErr)
 				return mock
 			},
+			txManagerMock: func(mc *minimock.Controller) db.TxManager {
+				mock := txMock.NewTxManagerMock(mc)
+				return mock
+			},
 		},
 	}
 
@@ -85,7 +97,8 @@ func TestCreate(t *testing.T) {
 			t.Parallel()
 
 			userRepoMock := tt.userRepositoryMock(mc)
-			service := user.NewMockService(userRepoMock)
+			txManMock := tt.txManagerMock(mc)
+			service := user.NewService(userRepoMock, txManMock)
 
 			reps, err := service.Create(tt.args.ctx, tt.args.req)
 			require.Equal(t, tt.err, err)

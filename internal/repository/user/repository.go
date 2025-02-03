@@ -7,8 +7,8 @@ import (
 	"github.com/biryanim/auth/internal/repository"
 	"github.com/biryanim/auth/internal/repository/user/converter"
 	modelRepo "github.com/biryanim/auth/internal/repository/user/model"
-	//"github.com/biryanim/auth/internal/client/db"
 	"github.com/biryanim/platform_common/pkg/db"
+	"github.com/biryanim/platform_common/pkg/filter"
 	"time"
 )
 
@@ -58,12 +58,15 @@ func (r *repo) Create(ctx context.Context, userInfo *model.UserInfo) (int64, err
 	return id, nil
 }
 
-func (r *repo) Get(ctx context.Context, id int64) (*model.User, error) {
+func (r *repo) Get(ctx context.Context, filter *filter.Filter) (*model.User, error) {
 	builder := sq.Select(idColumn, nameColumn, emailColumn, roleColumn, createdAtColumn, updatedAtColumn).
 		PlaceholderFormat(sq.Dollar).
 		From(tableName).
-		Where(sq.Eq{idColumn: id}).
 		Limit(1)
+
+	for _, condition := range filter.Conditions {
+		builder = builder.Where(sq.Eq{condition.Key: condition.Value})
+	}
 
 	query, args, err := builder.ToSql()
 	if err != nil {

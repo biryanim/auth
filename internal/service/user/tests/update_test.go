@@ -7,6 +7,8 @@ import (
 	"github.com/biryanim/auth/internal/repository"
 	repoMock "github.com/biryanim/auth/internal/repository/mocks"
 	"github.com/biryanim/auth/internal/service/user"
+	"github.com/biryanim/platform_common/pkg/db"
+	txMock "github.com/biryanim/platform_common/pkg/db/mocks"
 	"github.com/brianvoe/gofakeit/v7"
 	"github.com/gojuno/minimock/v3"
 	"github.com/stretchr/testify/require"
@@ -18,6 +20,7 @@ func TestUpdate(t *testing.T) {
 	t.Parallel()
 
 	type userRepositoryMockFunc func(mc *minimock.Controller) repository.UserRepository
+	type txManagerMock func(mc *minimock.Controller) db.TxManager
 
 	type args struct {
 		ctx context.Context
@@ -46,6 +49,7 @@ func TestUpdate(t *testing.T) {
 		args               args
 		err                error
 		userRepositoryMock userRepositoryMockFunc
+		txManagerMock      txManagerMock
 	}{
 		{
 			name: "success case",
@@ -58,6 +62,10 @@ func TestUpdate(t *testing.T) {
 			userRepositoryMock: func(mc *minimock.Controller) repository.UserRepository {
 				mock := repoMock.NewUserRepositoryMock(mc)
 				mock.UpdateMock.Expect(ctx, id, req).Return(nil)
+				return mock
+			},
+			txManagerMock: func(mc *minimock.Controller) db.TxManager {
+				mock := txMock.NewTxManagerMock(mc)
 				return mock
 			},
 		},
@@ -74,6 +82,10 @@ func TestUpdate(t *testing.T) {
 				mock.UpdateMock.Expect(ctx, id, req).Return(repoErr)
 				return mock
 			},
+			txManagerMock: func(mc *minimock.Controller) db.TxManager {
+				mock := txMock.NewTxManagerMock(mc)
+				return mock
+			},
 		},
 	}
 
@@ -83,7 +95,8 @@ func TestUpdate(t *testing.T) {
 			t.Parallel()
 
 			userRepoMock := tt.userRepositoryMock(mc)
-			service := user.NewMockService(userRepoMock)
+			txManagerMock := tt.txManagerMock(mc)
+			service := user.NewService(userRepoMock, txManagerMock)
 
 			err := service.Update(tt.args.ctx, tt.args.id, tt.args.req)
 			require.Equal(t, tt.err, err)

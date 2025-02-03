@@ -8,6 +8,8 @@ import (
 	"github.com/biryanim/auth/internal/repository"
 	repoMock "github.com/biryanim/auth/internal/repository/mocks"
 	"github.com/biryanim/auth/internal/service/user"
+	"github.com/biryanim/platform_common/pkg/db"
+	txMock "github.com/biryanim/platform_common/pkg/db/mocks"
 	"github.com/brianvoe/gofakeit/v7"
 	"github.com/gojuno/minimock/v3"
 
@@ -19,6 +21,7 @@ func TestGet(t *testing.T) {
 	t.Parallel()
 
 	type userRepositoryMockFunc func(mc *minimock.Controller) repository.UserRepository
+	type txManagerMock func(mc *minimock.Controller) db.TxManager
 
 	type args struct {
 		ctx context.Context
@@ -56,6 +59,7 @@ func TestGet(t *testing.T) {
 		want                *model.User
 		err                 error
 		userRepoositoryMock userRepositoryMockFunc
+		txManagerMock       txManagerMock
 	}{
 		{
 			name: "success case",
@@ -68,6 +72,10 @@ func TestGet(t *testing.T) {
 			userRepoositoryMock: func(mc *minimock.Controller) repository.UserRepository {
 				mock := repoMock.NewUserRepositoryMock(mc)
 				mock.GetMock.Expect(ctx, id).Return(res, nil)
+				return mock
+			},
+			txManagerMock: func(mc *minimock.Controller) db.TxManager {
+				mock := txMock.NewTxManagerMock(mc)
 				return mock
 			},
 		},
@@ -84,6 +92,10 @@ func TestGet(t *testing.T) {
 				mock.GetMock.Expect(ctx, id).Return(nil, repoErr)
 				return mock
 			},
+			txManagerMock: func(mc *minimock.Controller) db.TxManager {
+				mock := txMock.NewTxManagerMock(mc)
+				return mock
+			},
 		},
 	}
 
@@ -93,7 +105,8 @@ func TestGet(t *testing.T) {
 			t.Parallel()
 
 			userRepoMock := tt.userRepoositoryMock(mc)
-			service := user.NewMockService(userRepoMock)
+			txManagerMock := tt.txManagerMock(mc)
+			service := user.NewService(userRepoMock, txManagerMock)
 
 			resp, err := service.Get(tt.args.ctx, tt.args.id)
 			require.Equal(t, tt.err, err)
