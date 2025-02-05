@@ -13,7 +13,9 @@ type User struct {
 }
 
 type Info struct {
-	Name  string `db:"name"`
-	Email string `db:"email"`
-	Role  int32  `db:"role"`
+	Name     string `db:"name"`
+	Username string `db:"username"`
+	Email    string `db:"email"`
+	Role     int32  `db:"role"`
+	Password string `db:"password"`
 }

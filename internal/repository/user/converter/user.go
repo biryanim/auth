@@ -33,7 +33,10 @@ func ToUserInfoFromRepo(user modelRepo.Info) model.UserInfo {
 	//}
 
 	return model.UserInfo{
-		Name:  user.Name,
-		Email: user.Email,
+		Name:     user.Name,
+		Username: user.Username,
+		Email:    user.Email,
+		Role:     user.Role,
+		Password: user.Password,
 	}
 }

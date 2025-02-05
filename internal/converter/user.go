@@ -24,9 +24,10 @@ func ToUserFromService(user *model.User) *desc.User {
 
 func ToUserInfoFromService(info model.UserInfo) *desc.UserInfo {
 	return &desc.UserInfo{
-		Name:  info.Name,
-		Email: info.Email,
-		Role:  desc.Role(info.Role),
+		Name:     info.Name,
+		Username: info.Username,
+		Email:    info.Email,
+		Role:     desc.Role(info.Role),
 	}
 }
 
@@ -44,11 +45,13 @@ func stringToWrapper(s *string) *wrapperspb.StringValue {
 	return &wrapperspb.StringValue{Value: *s}
 }
 
-func ToUserInfoFromDesc(userInfo *desc.UserInfo) *model.UserInfo {
+func ToUserInfoFromDesc(userInfo *desc.UserInfo, password string) *model.UserInfo {
 	return &model.UserInfo{
-		Name:  userInfo.Name,
-		Email: userInfo.Email,
-		Role:  int32(userInfo.Role),
+		Name:     userInfo.Name,
+		Username: userInfo.Username,
+		Email:    userInfo.Email,
+		Role:     int32(userInfo.Role),
+		Password: password,
 	}
 }
 

@@ -64,8 +64,9 @@ enum Role{
 
 message UserInfo {
     string name = 1 [(validate.rules).string = {min_len: 5, max_len: 64}];
-    string email = 2 [(validate.rules).string.email = true];
-    Role role = 3;
+    string username = 2 [(validate.rules).string = {ignore_empty: false}];
+    string email = 3 [(validate.rules).string.email = true];
+    Role role = 4;
 }
 
 message User {

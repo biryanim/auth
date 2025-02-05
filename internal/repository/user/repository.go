@@ -19,6 +19,7 @@ const (
 	nameColumn      = "name"
 	emailColumn     = "email"
 	roleColumn      = "role"
+	usernameColumn  = "username"
 	passwordColumn  = "password"
 	createdAtColumn = "created_at"
 	updatedAtColumn = "updated_at"
@@ -35,8 +36,8 @@ func NewRepository(db db.Client) repository.UserRepository {
 func (r *repo) Create(ctx context.Context, userInfo *model.UserInfo) (int64, error) {
 	builder := sq.Insert(tableName).
 		PlaceholderFormat(sq.Dollar).
-		Columns(nameColumn, emailColumn, roleColumn).
-		Values(userInfo.Name, userInfo.Email, userInfo.Role).
+		Columns(nameColumn, usernameColumn, emailColumn, roleColumn, passwordColumn).
+		Values(userInfo.Name, userInfo.Username, userInfo.Email, userInfo.Role, userInfo.Password).
 		Suffix("RETURNING id")
 
 	query, args, err := builder.ToSql()
@@ -59,7 +60,7 @@ func (r *repo) Create(ctx context.Context, userInfo *model.UserInfo) (int64, err
 }
 
 func (r *repo) Get(ctx context.Context, filter *filter.Filter) (*model.User, error) {
-	builder := sq.Select(idColumn, nameColumn, emailColumn, roleColumn, createdAtColumn, updatedAtColumn).
+	builder := sq.Select(idColumn, nameColumn, usernameColumn, emailColumn, roleColumn, passwordColumn, createdAtColumn, updatedAtColumn).
 		PlaceholderFormat(sq.Dollar).
 		From(tableName).
 		Limit(1)
