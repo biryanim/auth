@@ -78,6 +78,7 @@ test:
 	go test ./... -covermode count -coverpkg=github.com/biryanim/auth/internal/service/...,github.com/biryanim/auth/internal/api/... -count 5
 
 test-coverage:
+	set -x
 	go clean -testcache
 	go test ./... -coverprofile=coverage.tmp.out -covermode count -coverpkg=github.com/biryanim/auth/internal/service/...,github.com/biryanim/auth/internal/api/... -count 5
 	grep -v 'mocks\|config' coverage.tmp.out  > coverage.out

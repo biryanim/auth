@@ -45,13 +45,19 @@ func stringToWrapper(s *string) *wrapperspb.StringValue {
 	return &wrapperspb.StringValue{Value: *s}
 }
 
-func ToUserInfoFromDesc(userInfo *desc.UserInfo, password string) *model.UserInfo {
+func ToUserCreateFromDesc(userInfo *desc.UserInfo, password string) *model.UserCreate {
+	return &model.UserCreate{
+		Info:     *ToUserInfoFromDesc(userInfo),
+		Password: password,
+	}
+}
+
+func ToUserInfoFromDesc(userInfo *desc.UserInfo) *model.UserInfo {
 	return &model.UserInfo{
 		Name:     userInfo.Name,
 		Username: userInfo.Username,
 		Email:    userInfo.Email,
 		Role:     int32(userInfo.Role),
-		Password: password,
 	}
 }
 

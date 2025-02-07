@@ -24,7 +24,7 @@ func TestCreate(t *testing.T) {
 
 	type args struct {
 		ctx context.Context
-		req *model.UserInfo
+		req *model.UserCreate
 	}
 
 	var (
@@ -37,10 +37,13 @@ func TestCreate(t *testing.T) {
 
 		repoErr = fmt.Errorf("repo error")
 
-		req = &model.UserInfo{
-			Name:  name,
-			Email: email,
-			Role:  1,
+		req = &model.UserCreate{
+			Info: model.UserInfo{
+				Name:  name,
+				Email: email,
+				Role:  1,
+			},
+			Password: "password",
 		}
 	)
 	defer t.Cleanup(mc.Finish)

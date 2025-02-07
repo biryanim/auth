@@ -33,11 +33,11 @@ func NewRepository(db db.Client) repository.UserRepository {
 	return &repo{db: db}
 }
 
-func (r *repo) Create(ctx context.Context, userInfo *model.UserInfo) (int64, error) {
+func (r *repo) Create(ctx context.Context, user *model.UserCreate) (int64, error) {
 	builder := sq.Insert(tableName).
 		PlaceholderFormat(sq.Dollar).
 		Columns(nameColumn, usernameColumn, emailColumn, roleColumn, passwordColumn).
-		Values(userInfo.Name, userInfo.Username, userInfo.Email, userInfo.Role, userInfo.Password).
+		Values(user.Info.Name, user.Info.Username, user.Info.Email, user.Info.Role, user.Password).
 		Suffix("RETURNING id")
 
 	query, args, err := builder.ToSql()

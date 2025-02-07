@@ -14,7 +14,7 @@ func (i *Implementation) Create(ctx context.Context, req *desc.CreateRequest) (*
 		return nil, status.Error(codes.InvalidArgument, "password does not match")
 	}
 
-	id, err := i.userService.Create(ctx, converter.ToUserInfoFromDesc(req.GetInfo(), req.GetPassword()))
+	id, err := i.userService.Create(ctx, converter.ToUserCreateFromDesc(req.GetInfo(), req.GetPassword()))
 	if err != nil {
 		return nil, err
 	}

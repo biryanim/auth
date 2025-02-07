@@ -2,11 +2,13 @@ package app
 
 import (
 	"context"
+	"github.com/biryanim/auth/internal/api/auth"
 	"github.com/biryanim/auth/internal/api/user"
 	"github.com/biryanim/auth/internal/config"
 	"github.com/biryanim/auth/internal/repository"
 	userRepository "github.com/biryanim/auth/internal/repository/user"
 	"github.com/biryanim/auth/internal/service"
+	authService "github.com/biryanim/auth/internal/service/auth"
 	userService "github.com/biryanim/auth/internal/service/user"
 	"github.com/biryanim/platform_common/pkg/closer"
 	"github.com/biryanim/platform_common/pkg/db"
@@ -20,14 +22,17 @@ type serviceProvider struct {
 	grpcConfig    config.GRPCConfig
 	httpConfig    config.HTTPConfig
 	swaggerConfig config.SwaggerConfig
+	jwtConfig     config.JWTConfig
 
 	dbClient       db.Client
 	txManager      db.TxManager
 	userRepository repository.UserRepository
 
 	userService service.UserService
+	authService service.AuthService
 
 	userImpl *user.Implementation
+	authImpl *auth.Implementation
 }
 
 func newServiceProvider() *serviceProvider {
@@ -85,6 +90,19 @@ func (s *serviceProvider) SwaggerConfig() config.SwaggerConfig {
 	return s.swaggerConfig
 }
 
+func (s *serviceProvider) JWTConfig() config.JWTConfig {
+	if s.jwtConfig == nil {
+		cfg, err := config.NewJWTConfig()
+		if err != nil {
+			log.Fatalf("failed to get jwt config: %v", err)
+		}
+
+		s.jwtConfig = cfg
+	}
+
+	return s.jwtConfig
+}
+
 func (s *serviceProvider) DBClient(ctx context.Context) db.Client {
 	if s.dbClient == nil {
 		cl, err := pg.New(ctx, s.PGConfig().DSN())
@@ -131,10 +149,26 @@ func (s *serviceProvider) UserService(ctx context.Context) service.UserService {
 	return s.userService
 }
 
+func (s *serviceProvider) AuthService(ctx context.Context) service.AuthService {
+	if s.authService == nil {
+		s.authService = authService.NewService(s.UserRepository(ctx), s.JWTConfig())
+	}
+
+	return s.authService
+}
+
 func (s *serviceProvider) UserImpl(ctx context.Context) *user.Implementation {
 	if s.userImpl == nil {
 		s.userImpl = user.NewImplementation(s.UserService(ctx))
 	}
 
 	return s.userImpl
+}
+
+func (s *serviceProvider) AuthImpl(ctx context.Context) *auth.Implementation {
+	if s.authImpl == nil {
+		s.authImpl = auth.NewImplementation(s.AuthService(ctx))
+	}
+
+	return s.authImpl
 }

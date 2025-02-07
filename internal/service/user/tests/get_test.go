@@ -10,6 +10,7 @@ import (
 	"github.com/biryanim/auth/internal/service/user"
 	"github.com/biryanim/platform_common/pkg/db"
 	txMock "github.com/biryanim/platform_common/pkg/db/mocks"
+	"github.com/biryanim/platform_common/pkg/filter"
 	"github.com/brianvoe/gofakeit/v7"
 	"github.com/gojuno/minimock/v3"
 
@@ -50,6 +51,11 @@ func TestGet(t *testing.T) {
 			CreatedAt: createdAt,
 			UpdatedAt: sql.NullTime{Time: updatedAt, Valid: true},
 		}
+
+		filterGet = filter.New(filter.Condition{
+			Key:   "id",
+			Value: id,
+		})
 	)
 	defer t.Cleanup(mc.Finish)
 
@@ -71,7 +77,7 @@ func TestGet(t *testing.T) {
 			err:  nil,
 			userRepoositoryMock: func(mc *minimock.Controller) repository.UserRepository {
 				mock := repoMock.NewUserRepositoryMock(mc)
-				mock.GetMock.Expect(ctx, id).Return(res, nil)
+				mock.GetMock.Expect(ctx, filterGet).Return(res, nil)
 				return mock
 			},
 			txManagerMock: func(mc *minimock.Controller) db.TxManager {
@@ -89,7 +95,7 @@ func TestGet(t *testing.T) {
 			err:  repoErr,
 			userRepoositoryMock: func(mc *minimock.Controller) repository.UserRepository {
 				mock := repoMock.NewUserRepositoryMock(mc)
-				mock.GetMock.Expect(ctx, id).Return(nil, repoErr)
+				mock.GetMock.Expect(ctx, filterGet).Return(nil, repoErr)
 				return mock
 			},
 			txManagerMock: func(mc *minimock.Controller) db.TxManager {

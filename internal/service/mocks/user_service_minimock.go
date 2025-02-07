@@ -19,9 +19,9 @@ type UserServiceMock struct {
 	t          minimock.Tester
 	finishOnce sync.Once
 
-	funcCreate          func(ctx context.Context, userInfo *model.UserInfo) (i1 int64, err error)
+	funcCreate          func(ctx context.Context, userInfo *model.UserCreate) (i1 int64, err error)
 	funcCreateOrigin    string
-	inspectFuncCreate   func(ctx context.Context, userInfo *model.UserInfo)
+	inspectFuncCreate   func(ctx context.Context, userInfo *model.UserCreate)
 	afterCreateCounter  uint64
 	beforeCreateCounter uint64
 	CreateMock          mUserServiceMockCreate
@@ -100,13 +100,13 @@ type UserServiceMockCreateExpectation struct {
 // UserServiceMockCreateParams contains parameters of the UserService.Create
 type UserServiceMockCreateParams struct {
 	ctx      context.Context
-	userInfo *model.UserInfo
+	userInfo *model.UserCreate
 }
 
 // UserServiceMockCreateParamPtrs contains pointers to parameters of the UserService.Create
 type UserServiceMockCreateParamPtrs struct {
 	ctx      *context.Context
-	userInfo **model.UserInfo
+	userInfo **model.UserCreate
 }
 
 // UserServiceMockCreateResults contains results of the UserService.Create
@@ -133,7 +133,7 @@ func (mmCreate *mUserServiceMockCreate) Optional() *mUserServiceMockCreate {
 }
 
 // Expect sets up expected params for UserService.Create
-func (mmCreate *mUserServiceMockCreate) Expect(ctx context.Context, userInfo *model.UserInfo) *mUserServiceMockCreate {
+func (mmCreate *mUserServiceMockCreate) Expect(ctx context.Context, userInfo *model.UserCreate) *mUserServiceMockCreate {
 	if mmCreate.mock.funcCreate != nil {
 		mmCreate.mock.t.Fatalf("UserServiceMock.Create mock is already set by Set")
 	}
@@ -181,7 +181,7 @@ func (mmCreate *mUserServiceMockCreate) ExpectCtxParam1(ctx context.Context) *mU
 }
 
 // ExpectUserInfoParam2 sets up expected param userInfo for UserService.Create
-func (mmCreate *mUserServiceMockCreate) ExpectUserInfoParam2(userInfo *model.UserInfo) *mUserServiceMockCreate {
+func (mmCreate *mUserServiceMockCreate) ExpectUserInfoParam2(userInfo *model.UserCreate) *mUserServiceMockCreate {
 	if mmCreate.mock.funcCreate != nil {
 		mmCreate.mock.t.Fatalf("UserServiceMock.Create mock is already set by Set")
 	}
@@ -204,7 +204,7 @@ func (mmCreate *mUserServiceMockCreate) ExpectUserInfoParam2(userInfo *model.Use
 }
 
 // Inspect accepts an inspector function that has same arguments as the UserService.Create
-func (mmCreate *mUserServiceMockCreate) Inspect(f func(ctx context.Context, userInfo *model.UserInfo)) *mUserServiceMockCreate {
+func (mmCreate *mUserServiceMockCreate) Inspect(f func(ctx context.Context, userInfo *model.UserCreate)) *mUserServiceMockCreate {
 	if mmCreate.mock.inspectFuncCreate != nil {
 		mmCreate.mock.t.Fatalf("Inspect function is already set for UserServiceMock.Create")
 	}
@@ -229,7 +229,7 @@ func (mmCreate *mUserServiceMockCreate) Return(i1 int64, err error) *UserService
 }
 
 // Set uses given function f to mock the UserService.Create method
-func (mmCreate *mUserServiceMockCreate) Set(f func(ctx context.Context, userInfo *model.UserInfo) (i1 int64, err error)) *UserServiceMock {
+func (mmCreate *mUserServiceMockCreate) Set(f func(ctx context.Context, userInfo *model.UserCreate) (i1 int64, err error)) *UserServiceMock {
 	if mmCreate.defaultExpectation != nil {
 		mmCreate.mock.t.Fatalf("Default expectation is already set for the UserService.Create method")
 	}
@@ -245,7 +245,7 @@ func (mmCreate *mUserServiceMockCreate) Set(f func(ctx context.Context, userInfo
 
 // When sets expectation for the UserService.Create which will trigger the result defined by the following
 // Then helper
-func (mmCreate *mUserServiceMockCreate) When(ctx context.Context, userInfo *model.UserInfo) *UserServiceMockCreateExpectation {
+func (mmCreate *mUserServiceMockCreate) When(ctx context.Context, userInfo *model.UserCreate) *UserServiceMockCreateExpectation {
 	if mmCreate.mock.funcCreate != nil {
 		mmCreate.mock.t.Fatalf("UserServiceMock.Create mock is already set by Set")
 	}
@@ -287,7 +287,7 @@ func (mmCreate *mUserServiceMockCreate) invocationsDone() bool {
 }
 
 // Create implements mm_service.UserService
-func (mmCreate *UserServiceMock) Create(ctx context.Context, userInfo *model.UserInfo) (i1 int64, err error) {
+func (mmCreate *UserServiceMock) Create(ctx context.Context, userInfo *model.UserCreate) (i1 int64, err error) {
 	mm_atomic.AddUint64(&mmCreate.beforeCreateCounter, 1)
 	defer mm_atomic.AddUint64(&mmCreate.afterCreateCounter, 1)
 

@@ -10,6 +10,7 @@ type User struct {
 	Info      Info         `db:""`
 	CreatedAt time.Time    `db:"created_at"`
 	UpdatedAt sql.NullTime `db:"updated_at"`
+	Password  string       `db:"password"`
 }
 
 type Info struct {
@@ -17,5 +18,4 @@ type Info struct {
 	Username string `db:"username"`
 	Email    string `db:"email"`
 	Role     int32  `db:"role"`
-	Password string `db:"password"`
 }

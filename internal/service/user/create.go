@@ -6,7 +6,7 @@ import (
 	"github.com/biryanim/auth/internal/utils"
 )
 
-func (s *serv) Create(ctx context.Context, userInfo *model.UserInfo) (int64, error) {
+func (s *serv) Create(ctx context.Context, userInfo *model.UserCreate) (int64, error) {
 	var id int64
 
 	hashedPassword, err := utils.HashPassword(userInfo.Password)
