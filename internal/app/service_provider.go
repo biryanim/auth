@@ -22,7 +22,7 @@ type serviceProvider struct {
 	grpcConfig    config.GRPCConfig
 	httpConfig    config.HTTPConfig
 	swaggerConfig config.SwaggerConfig
-	jwtConfig     config.JWTConfig
+	jwtConfig     config.AuthConfig
 
 	dbClient       db.Client
 	txManager      db.TxManager
@@ -90,7 +90,7 @@ func (s *serviceProvider) SwaggerConfig() config.SwaggerConfig {
 	return s.swaggerConfig
 }
 
-func (s *serviceProvider) JWTConfig() config.JWTConfig {
+func (s *serviceProvider) JWTConfig() config.AuthConfig {
 	if s.jwtConfig == nil {
 		cfg, err := config.NewJWTConfig()
 		if err != nil {
