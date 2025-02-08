@@ -23,7 +23,7 @@ func (s *serv) Login(ctx context.Context, login *model.LoginDTO) (string, error)
 		return "", errors.New("invalid password")
 	}
 
-	refreshToken, err := utils.GenerateToken(user.Info, s.jwtCfg.RefreshTokenSecret(), s.jwtCfg.RefreshTokenExpiration())
+	refreshToken, err := utils.GenerateToken(user.Info, s.authConfig.RefreshTokenSecret(), s.authConfig.RefreshTokenExpiration())
 	if err != nil {
 		return "", errors.New("failed to generate token")
 	}

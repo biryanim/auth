@@ -12,3 +12,7 @@ type UserRepository interface {
 	Update(ctx context.Context, id int64, updateInfo *model.UpdateUserInfo) error
 	Delete(ctx context.Context, id int64) error
 }
+
+type AccessRepository interface {
+	GetList(ctx context.Context) ([]*model.AccessInfo, error)
+}

@@ -4,6 +4,7 @@ import (
 	"context"
 	"github.com/biryanim/auth/internal/config"
 	"github.com/biryanim/auth/internal/interceptor"
+	descAccess "github.com/biryanim/auth/pkg/access_v1"
 	descAuth "github.com/biryanim/auth/pkg/auth_v1"
 	descUser "github.com/biryanim/auth/pkg/user_api_v1"
 	"github.com/biryanim/platform_common/pkg/closer"
@@ -125,6 +126,7 @@ func (a *App) initGRPCServer(ctx context.Context) error {
 
 	descUser.RegisterUserAPIV1Server(a.grpcServer, a.serviceProvider.UserImpl(ctx))
 	descAuth.RegisterAuthV1Server(a.grpcServer, a.serviceProvider.AuthImpl(ctx))
+	descAccess.RegisterAccessV1Server(a.grpcServer, a.serviceProvider.AccessImpl(ctx))
 
 	return nil
 }

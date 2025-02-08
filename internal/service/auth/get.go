@@ -7,7 +7,7 @@ import (
 )
 
 func (s *serv) GetRefreshToken(ctx context.Context, oldToken string) (string, error) {
-	claims, err := utils.VerifyToken(oldToken, s.jwtCfg.RefreshTokenSecret())
+	claims, err := utils.VerifyToken(oldToken, s.authConfig.RefreshTokenSecret())
 	if err != nil {
 		return "", err
 	}
@@ -15,7 +15,7 @@ func (s *serv) GetRefreshToken(ctx context.Context, oldToken string) (string, er
 	refreshToken, err := utils.GenerateToken(model.UserInfo{
 		Username: claims.Username,
 		Role:     claims.Role,
-	}, s.jwtCfg.RefreshTokenSecret(), s.jwtCfg.RefreshTokenExpiration())
+	}, s.authConfig.RefreshTokenSecret(), s.authConfig.RefreshTokenExpiration())
 	if err != nil {
 		return "", err
 	}
@@ -24,7 +24,7 @@ func (s *serv) GetRefreshToken(ctx context.Context, oldToken string) (string, er
 }
 
 func (s *serv) GetAccessToken(ctx context.Context, refreshToken string) (string, error) {
-	claims, err := utils.VerifyToken(refreshToken, s.jwtCfg.RefreshTokenSecret())
+	claims, err := utils.VerifyToken(refreshToken, s.authConfig.RefreshTokenSecret())
 	if err != nil {
 		return "", err
 	}
@@ -32,7 +32,7 @@ func (s *serv) GetAccessToken(ctx context.Context, refreshToken string) (string,
 	accessToken, err := utils.GenerateToken(model.UserInfo{
 		Username: claims.Username,
 		Role:     claims.Role,
-	}, s.jwtCfg.AccessTokenSecret(), s.jwtCfg.AccessTokenExpiration())
+	}, s.authConfig.AccessTokenSecret(), s.authConfig.AccessTokenExpiration())
 	if err != nil {
 		return "", err
 	}

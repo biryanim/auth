@@ -2,12 +2,15 @@ package app
 
 import (
 	"context"
+	"github.com/biryanim/auth/internal/api/access"
 	"github.com/biryanim/auth/internal/api/auth"
 	"github.com/biryanim/auth/internal/api/user"
 	"github.com/biryanim/auth/internal/config"
 	"github.com/biryanim/auth/internal/repository"
+	accessRepository "github.com/biryanim/auth/internal/repository/access"
 	userRepository "github.com/biryanim/auth/internal/repository/user"
 	"github.com/biryanim/auth/internal/service"
+	accessService "github.com/biryanim/auth/internal/service/access"
 	authService "github.com/biryanim/auth/internal/service/auth"
 	userService "github.com/biryanim/auth/internal/service/user"
 	"github.com/biryanim/platform_common/pkg/closer"
@@ -22,17 +25,20 @@ type serviceProvider struct {
 	grpcConfig    config.GRPCConfig
 	httpConfig    config.HTTPConfig
 	swaggerConfig config.SwaggerConfig
-	jwtConfig     config.AuthConfig
+	authConfig    config.AuthConfig
 
-	dbClient       db.Client
-	txManager      db.TxManager
-	userRepository repository.UserRepository
+	dbClient         db.Client
+	txManager        db.TxManager
+	userRepository   repository.UserRepository
+	accessRepository repository.AccessRepository
 
-	userService service.UserService
-	authService service.AuthService
+	userService   service.UserService
+	authService   service.AuthService
+	accessService service.AccessService
 
-	userImpl *user.Implementation
-	authImpl *auth.Implementation
+	userImpl   *user.Implementation
+	authImpl   *auth.Implementation
+	accessImpl *access.Implementation
 }
 
 func newServiceProvider() *serviceProvider {
@@ -90,17 +96,17 @@ func (s *serviceProvider) SwaggerConfig() config.SwaggerConfig {
 	return s.swaggerConfig
 }
 
-func (s *serviceProvider) JWTConfig() config.AuthConfig {
-	if s.jwtConfig == nil {
+func (s *serviceProvider) AuthConfig() config.AuthConfig {
+	if s.authConfig == nil {
 		cfg, err := config.NewJWTConfig()
 		if err != nil {
 			log.Fatalf("failed to get jwt config: %v", err)
 		}
 
-		s.jwtConfig = cfg
+		s.authConfig = cfg
 	}
 
-	return s.jwtConfig
+	return s.authConfig
 }
 
 func (s *serviceProvider) DBClient(ctx context.Context) db.Client {
@@ -138,6 +144,14 @@ func (s *serviceProvider) UserRepository(ctx context.Context) repository.UserRep
 	return s.userRepository
 }
 
+func (s *serviceProvider) AccessRepository(ctx context.Context) repository.AccessRepository {
+	if s.accessRepository == nil {
+		s.accessRepository = accessRepository.NewRepository(s.DBClient(ctx))
+	}
+
+	return s.accessRepository
+}
+
 func (s *serviceProvider) UserService(ctx context.Context) service.UserService {
 	if s.userService == nil {
 		s.userService = userService.NewService(
@@ -151,10 +165,18 @@ func (s *serviceProvider) UserService(ctx context.Context) service.UserService {
 
 func (s *serviceProvider) AuthService(ctx context.Context) service.AuthService {
 	if s.authService == nil {
-		s.authService = authService.NewService(s.UserRepository(ctx), s.JWTConfig())
+		s.authService = authService.NewService(s.UserRepository(ctx), s.AuthConfig())
 	}
 
 	return s.authService
+}
+
+func (s *serviceProvider) AccessService(ctx context.Context) service.AccessService {
+	if s.accessService == nil {
+		s.accessService = accessService.NewService(s.AuthConfig(), s.AccessRepository(ctx))
+	}
+
+	return s.accessService
 }
 
 func (s *serviceProvider) UserImpl(ctx context.Context) *user.Implementation {
@@ -171,4 +193,12 @@ func (s *serviceProvider) AuthImpl(ctx context.Context) *auth.Implementation {
 	}
 
 	return s.authImpl
+}
+
+func (s *serviceProvider) AccessImpl(ctx context.Context) *access.Implementation {
+	if s.accessImpl == nil {
+		s.accessImpl = access.NewImplementation(s.AccessService(ctx))
+	}
+
+	return s.accessImpl
 }
