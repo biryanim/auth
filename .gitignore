@@ -1,5 +1,6 @@
 .idea
 /bin/
+logs
 coverage.out
 .env
 vendor.protogen//coverage.out
