@@ -8,6 +8,8 @@ import (
 	descAuth "github.com/biryanim/auth/pkg/auth_v1"
 	descUser "github.com/biryanim/auth/pkg/user_api_v1"
 	"github.com/biryanim/platform_common/pkg/closer"
+	"github.com/biryanim/platform_common/pkg/logger"
+	grpcMiddleware "github.com/grpc-ecosystem/go-grpc-middleware"
 	"github.com/grpc-ecosystem/grpc-gateway/v2/runtime"
 	"github.com/rakyll/statik/fs"
 	"github.com/rs/cors"
@@ -90,6 +92,7 @@ func (a *App) initDeps(ctx context.Context) error {
 		a.initGRPCServer,
 		a.initHTTPServer,
 		a.initSwaggerServer,
+		a.initLogger,
 	}
 
 	for _, f := range inits {
@@ -103,7 +106,7 @@ func (a *App) initDeps(ctx context.Context) error {
 }
 
 func (a *App) initConfig(_ context.Context) error {
-	err := config.Load("../.env")
+	err := config.Load(".env")
 	if err != nil {
 		return err
 	}
@@ -119,7 +122,11 @@ func (a *App) initServiceProvider(ctx context.Context) error {
 func (a *App) initGRPCServer(ctx context.Context) error {
 	a.grpcServer = grpc.NewServer(
 		grpc.Creds(insecure.NewCredentials()),
-		grpc.UnaryInterceptor(interceptor.ValidateInterceptor),
+		grpc.UnaryInterceptor(
+			grpcMiddleware.ChainUnaryServer(
+				interceptor.LogInterceptor,
+				interceptor.ValidateInterceptor,
+			)),
 	)
 
 	reflection.Register(a.grpcServer)
@@ -248,5 +255,10 @@ func (a *App) runSwaggerServer() error {
 	if err != nil {
 		return err
 	}
+	return nil
+}
+
+func (a *App) initLogger(ctx context.Context) error {
+	logger.Init(a.serviceProvider.LoggerConfig().GetCore())
 	return nil
 }

@@ -17,6 +17,7 @@ import (
 	"github.com/biryanim/platform_common/pkg/db"
 	"github.com/biryanim/platform_common/pkg/db/pg"
 	"github.com/biryanim/platform_common/pkg/db/transaction"
+
 	"log"
 )
 
@@ -26,6 +27,7 @@ type serviceProvider struct {
 	httpConfig    config.HTTPConfig
 	swaggerConfig config.SwaggerConfig
 	authConfig    config.AuthConfig
+	loggerConfig  config.LoggerConfig
 
 	dbClient         db.Client
 	txManager        db.TxManager
@@ -107,6 +109,18 @@ func (s *serviceProvider) AuthConfig() config.AuthConfig {
 	}
 
 	return s.authConfig
+}
+
+func (s *serviceProvider) LoggerConfig() config.LoggerConfig {
+	if s.loggerConfig == nil {
+		cfg, err := config.NewLoggerConfig()
+		if err != nil {
+			log.Fatalf("failed to get logger config: %v", err)
+		}
+
+		s.loggerConfig = cfg
+	}
+	return s.loggerConfig
 }
 
 func (s *serviceProvider) DBClient(ctx context.Context) db.Client {
