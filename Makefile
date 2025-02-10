@@ -100,6 +100,17 @@ grpc-load-test:
 		localhost:50051
 
 
+grpc-error-load-test:
+	ghz \
+		--proto api/auth_v1/auth.proto \
+		--call auth_v1.AuthV1/Login \
+		--data '{"info": {"password": "wer123","username": "biweranim"}}' \
+		--rps 100 \
+		--total 3000 \
+		--insecure \
+		localhost:50051
+
+
 vendor-proto:
 	@if [ ! -d vendor.protogen/validate ]; then \
   		mkdir -p vendor.protogen/validate &&\
