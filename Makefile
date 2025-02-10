@@ -88,6 +88,18 @@ test-coverage:
 	grep -sqFx "/coverage.out" .gitignore || echo "/coverage.out" >> .gitignore
 
 
+
+grpc-load-test:
+	ghz \
+		--proto api/auth_v1/auth.proto \
+		--call auth_v1.AuthV1/Login \
+		--data '{"info": {"password": "qwerty123","username": "biryanim"}}' \
+		--rps 100 \
+		--total 3000 \
+		--insecure \
+		localhost:50051
+
+
 vendor-proto:
 	@if [ ! -d vendor.protogen/validate ]; then \
   		mkdir -p vendor.protogen/validate &&\

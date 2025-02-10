@@ -8,5 +8,17 @@ services:
     volumes:
       - postgres_users_volume:/var/lib/postgresql/data
 
+  prometheus:
+    image: prom/prometheus:v3.1.0
+    ports:
+      - "9090:9090"
+    volumes:
+      - ./prometheus.yml:/etc/prometheus/prometheus.yml
+      - ./alerts.yml:/etc/prometheus//alerts.yml
+      - prometheus_data:/prometheus
+    network_mode: "host"
+
+
 volumes:
   postgres_users_volume:
+  prometheus_data:

@@ -4,13 +4,14 @@ import (
 	"context"
 	"github.com/biryanim/auth/internal/config"
 	"github.com/biryanim/auth/internal/interceptor"
+	"github.com/biryanim/auth/internal/metric"
 	descAccess "github.com/biryanim/auth/pkg/access_v1"
 	descAuth "github.com/biryanim/auth/pkg/auth_v1"
 	descUser "github.com/biryanim/auth/pkg/user_api_v1"
 	"github.com/biryanim/platform_common/pkg/closer"
 	"github.com/biryanim/platform_common/pkg/logger"
-	grpcMiddleware "github.com/grpc-ecosystem/go-grpc-middleware"
 	"github.com/grpc-ecosystem/grpc-gateway/v2/runtime"
+	"github.com/prometheus/client_golang/prometheus/promhttp"
 	"github.com/rakyll/statik/fs"
 	"github.com/rs/cors"
 	"google.golang.org/grpc"
@@ -27,10 +28,11 @@ import (
 )
 
 type App struct {
-	serviceProvider *serviceProvider
-	grpcServer      *grpc.Server
-	httpServer      *http.Server
-	swaggerServer   *http.Server
+	serviceProvider  *serviceProvider
+	grpcServer       *grpc.Server
+	httpServer       *http.Server
+	swaggerServer    *http.Server
+	prometheusServer *http.Server
 }
 
 func NewApp(ctx context.Context) (*App, error) {
@@ -51,7 +53,7 @@ func (a *App) Run() error {
 	}()
 
 	wg := sync.WaitGroup{}
-	wg.Add(3)
+	wg.Add(4)
 
 	go func() {
 		defer wg.Done()
@@ -80,6 +82,15 @@ func (a *App) Run() error {
 		}
 	}()
 
+	go func() {
+		defer wg.Done()
+
+		err := a.runPrometheus()
+		if err != nil {
+			log.Fatalf("failed to run Prometheus server: %v", err)
+		}
+	}()
+
 	wg.Wait()
 
 	return nil
@@ -88,9 +99,11 @@ func (a *App) Run() error {
 func (a *App) initDeps(ctx context.Context) error {
 	inits := []func(ctx context.Context) error{
 		a.initConfig,
+		a.initMetrics,
 		a.initServiceProvider,
 		a.initGRPCServer,
 		a.initHTTPServer,
+		a.initPrometheus,
 		a.initSwaggerServer,
 		a.initLogger,
 	}
@@ -122,11 +135,11 @@ func (a *App) initServiceProvider(ctx context.Context) error {
 func (a *App) initGRPCServer(ctx context.Context) error {
 	a.grpcServer = grpc.NewServer(
 		grpc.Creds(insecure.NewCredentials()),
-		grpc.UnaryInterceptor(
-			grpcMiddleware.ChainUnaryServer(
-				interceptor.LogInterceptor,
-				interceptor.ValidateInterceptor,
-			)),
+		grpc.ChainUnaryInterceptor(
+			interceptor.LogInterceptor,
+			interceptor.MetricsInterceptor,
+			interceptor.ValidateInterceptor,
+		),
 	)
 
 	reflection.Register(a.grpcServer)
@@ -249,7 +262,7 @@ func (a *App) runHTTPServer() error {
 }
 
 func (a *App) runSwaggerServer() error {
-	log.Printf("Swagger server is running on %s", a.serviceProvider.HTTPConfig().Address())
+	log.Printf("Swagger server is running on %s", a.serviceProvider.SwaggerConfig().Address())
 
 	err := a.swaggerServer.ListenAndServe()
 	if err != nil {
@@ -260,5 +273,32 @@ func (a *App) runSwaggerServer() error {
 
 func (a *App) initLogger(ctx context.Context) error {
 	logger.Init(a.serviceProvider.LoggerConfig().GetCore())
+	return nil
+}
+
+func (a *App) initMetrics(ctx context.Context) error {
+	return metric.Init(ctx)
+}
+
+func (a *App) initPrometheus(ctx context.Context) error {
+	mux := http.NewServeMux()
+	mux.Handle("/metrics", promhttp.Handler())
+
+	a.prometheusServer = &http.Server{
+		Addr:    "localhost:2112",
+		Handler: mux,
+	}
+
+	return nil
+}
+
+func (a *App) runPrometheus() error {
+	log.Printf("Prometheus server is running on %s", a.prometheusServer.Addr)
+
+	err := a.prometheusServer.ListenAndServe()
+	if err != nil {
+		return err
+	}
+
 	return nil
 }
