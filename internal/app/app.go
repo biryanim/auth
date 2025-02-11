@@ -15,6 +15,7 @@ import (
 	"github.com/prometheus/client_golang/prometheus/promhttp"
 	"github.com/rakyll/statik/fs"
 	"github.com/rs/cors"
+	"github.com/sony/gobreaker"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/credentials/insecure"
 	"google.golang.org/grpc/reflection"
@@ -138,11 +139,25 @@ func (a *App) initGRPCServer(ctx context.Context) error {
 
 	rateLimiter := rate_limiter.NewTokenBucketLimiter(ctx, 100, time.Second)
 
+	cb := gobreaker.NewCircuitBreaker(gobreaker.Settings{
+		Name:        "auth-microservice",
+		MaxRequests: 5,
+		Timeout:     5 * time.Second,
+		ReadyToTrip: func(counts gobreaker.Counts) bool {
+			failureRate := float64(counts.TotalFailures) / float64(counts.Requests)
+			return failureRate >= 0.6
+		},
+		OnStateChange: func(name string, from gobreaker.State, to gobreaker.State) {
+			log.Printf("Circuit Breaker: %s, changed from %v, to %v\n", name, from, to)
+		},
+	})
+
 	a.grpcServer = grpc.NewServer(
 		grpc.Creds(insecure.NewCredentials()),
 		grpc.ChainUnaryInterceptor(
 			interceptor.LogInterceptor,
 			interceptor.NewRateLimiterInterceptor(rateLimiter).Unary,
+			interceptor.NewCircuitBreakerInterceptor(cb).Unary,
 			interceptor.MetricsInterceptor,
 			interceptor.ValidateInterceptor,
 			interceptor.ServerTracingInterceptor,
