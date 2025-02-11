@@ -5,6 +5,7 @@ import (
 	"github.com/biryanim/auth/internal/config"
 	"github.com/biryanim/auth/internal/interceptor"
 	"github.com/biryanim/auth/internal/metric"
+	"github.com/biryanim/auth/internal/rate_limiter"
 	descAccess "github.com/biryanim/auth/pkg/access_v1"
 	descAuth "github.com/biryanim/auth/pkg/auth_v1"
 	descUser "github.com/biryanim/auth/pkg/user_api_v1"
@@ -18,6 +19,7 @@ import (
 	"google.golang.org/grpc/credentials/insecure"
 	"google.golang.org/grpc/reflection"
 	"io"
+	"time"
 
 	"log"
 	"net"
@@ -133,10 +135,14 @@ func (a *App) initServiceProvider(ctx context.Context) error {
 }
 
 func (a *App) initGRPCServer(ctx context.Context) error {
+
+	rateLimiter := rate_limiter.NewTokenBucketLimiter(ctx, 100, time.Second)
+
 	a.grpcServer = grpc.NewServer(
 		grpc.Creds(insecure.NewCredentials()),
 		grpc.ChainUnaryInterceptor(
 			interceptor.LogInterceptor,
+			interceptor.NewRateLimiterInterceptor(rateLimiter).Unary,
 			interceptor.MetricsInterceptor,
 			interceptor.ValidateInterceptor,
 			interceptor.ServerTracingInterceptor,

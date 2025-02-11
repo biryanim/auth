@@ -17,7 +17,6 @@ import (
 	"github.com/biryanim/platform_common/pkg/db"
 	"github.com/biryanim/platform_common/pkg/db/pg"
 	"github.com/biryanim/platform_common/pkg/db/transaction"
-
 	"log"
 )
 
