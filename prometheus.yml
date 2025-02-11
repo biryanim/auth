@@ -12,4 +12,4 @@ scrape_configs:
 
   - job_name: "app"
     static_configs:
-      - targets: [ "localhost:2112" ]
+      - targets: [ "host.docker.internal:2112" ]

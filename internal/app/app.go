@@ -139,6 +139,7 @@ func (a *App) initGRPCServer(ctx context.Context) error {
 			interceptor.LogInterceptor,
 			interceptor.MetricsInterceptor,
 			interceptor.ValidateInterceptor,
+			interceptor.ServerTracingInterceptor,
 		),
 	)
 
@@ -285,7 +286,7 @@ func (a *App) initPrometheus(ctx context.Context) error {
 	mux.Handle("/metrics", promhttp.Handler())
 
 	a.prometheusServer = &http.Server{
-		Addr:    "localhost:2112",
+		Addr:    "0.0.0.0:2112",
 		Handler: mux,
 	}
 
