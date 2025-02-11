@@ -158,6 +158,7 @@ func (a *App) initGRPCServer(ctx context.Context) error {
 			interceptor.LogInterceptor,
 			interceptor.NewRateLimiterInterceptor(rateLimiter).Unary,
 			interceptor.NewCircuitBreakerInterceptor(cb).Unary,
+			interceptor.ErrorCodesInterceptor,
 			interceptor.MetricsInterceptor,
 			interceptor.ValidateInterceptor,
 			interceptor.ServerTracingInterceptor,
